@@ -1,16 +1,34 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"rutina.api/Controllers"
+	"rutina.api/Repositories"
 )
 
 func main() {
-	router := gin.Default()
-	Controllers.RegisterEjercicioRoutes(router)
+	// Inicializar la conexión a la base de datos
+	repository, err := InitializeDatabase()
+	if err != nil {
+		panic("Error al inicializar la base de datos: " + err.Error())
+	}
 
-	err := router.Run(":8080")
+	router := gin.Default()
+	Controllers.RegisterEjercicioRoutes(router, repository)
+
+	err = router.Run(":8080")
 	if err != nil {
 		panic("Error al iniciar el servidor: " + err.Error())
 	}
+}
+
+func InitializeDatabase() (Repositories.EjercicioRepository, error) {
+	// Iniciar la conexión a la base de datos
+	repository, err := Repositories.NewEjercicioRepository()
+	if err != nil {
+		log.Println("Error al inicializar la base de datos:", err)
+	}
+	return *repository, err
 }
