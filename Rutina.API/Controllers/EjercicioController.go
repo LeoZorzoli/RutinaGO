@@ -29,16 +29,13 @@ func RegisterEjercicioRoutes(router *gin.Engine, repository Repositories.Ejercic
 }
 
 func (ec *EjercicioController) GetAllEjercicios(c *gin.Context) {
-	var response Contracts.GetAllEjerciciosResponse
-
 	ejercicios, err := ec.service.GetAllEjercicios()
 	if err != nil {
-		response := Contracts.BaseResponse{Success: false, Message: "Error al obtener ejercicios: " + err.Error()}
-		c.JSON(http.StatusInternalServerError, response)
+		c.Error(err)
 		return
 	}
 
-	response = Contracts.GetAllEjerciciosResponse{
+	response := Contracts.GetAllEjerciciosResponse{
 		BaseResponse: Contracts.BaseResponse{Success: true, Message: "Ejercicios obtenidos correctamente"},
 		Ejercicios:   ejercicios,
 	}
@@ -49,15 +46,13 @@ func (ec *EjercicioController) GetAllEjercicios(c *gin.Context) {
 func (ec *EjercicioController) GetEjercicioByID(c *gin.Context) {
 	var request Contracts.GetEjercicioByIdRequest
 	if err := c.ShouldBindQuery(&request); err != nil {
-		response := Contracts.BaseResponse{Success: false, Message: "Error al obtener el ejercicio: " + err.Error()}
-		c.JSON(http.StatusInternalServerError, response)
+		c.Error(err)
 		return
 	}
 
 	ejercicio, err := ec.service.GetEjercicioByID(request.ID)
 	if err != nil {
-		response := Contracts.BaseResponse{Success: false, Message: "Error al obtener el ejercicio: " + err.Error()}
-		c.JSON(http.StatusInternalServerError, response)
+		c.Error(err)
 		return
 	}
 	c.JSON(http.StatusOK, ejercicio)
@@ -66,8 +61,7 @@ func (ec *EjercicioController) GetEjercicioByID(c *gin.Context) {
 func (ec *EjercicioController) CreateEjercicio(c *gin.Context) {
 	var request Contracts.CreateEjercicioRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		response := Contracts.BaseResponse{Success: false, Message: "Error al crear el ejercicio: " + err.Error()}
-		c.JSON(http.StatusInternalServerError, response)
+		c.Error(err)
 		return
 	}
 
@@ -76,29 +70,26 @@ func (ec *EjercicioController) CreateEjercicio(c *gin.Context) {
 	}
 
 	if err := ec.service.CreateEjercicio(ejercicio); err != nil {
-		response := Contracts.BaseResponse{Success: false, Message: "Error al crear el ejercicio: " + err.Error()}
-		c.JSON(http.StatusInternalServerError, response)
+		c.Error(err)
 		return
 	}
 
 	response := Contracts.BaseResponse{Success: true, Message: "Ejercicio creado correctamente"}
-	c.JSON(http.StatusInternalServerError, response)
+	c.JSON(http.StatusCreated, response)
 }
 
 func (ec *EjercicioController) DeleteEjercicio(c *gin.Context) {
 	var request Contracts.DeleteEjercicioRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		response := Contracts.BaseResponse{Success: false, Message: "Error al borrar el ejercicio: " + err.Error()}
-		c.JSON(http.StatusInternalServerError, response)
+		c.Error(err)
 		return
 	}
 
-	err := ec.service.DeleteEjercicio(request.ID)
-	if err != nil {
-		response := Contracts.BaseResponse{Success: false, Message: "Error al borrar el ejercicio: " + err.Error()}
-		c.JSON(http.StatusInternalServerError, response)
+	if err := ec.service.DeleteEjercicio(request.ID); err != nil {
+		c.Error(err)
 		return
 	}
+
 	response := Contracts.BaseResponse{Success: true, Message: "Ejercicio eliminado correctamente"}
-	c.JSON(http.StatusInternalServerError, response)
+	c.JSON(http.StatusOK, response)
 }

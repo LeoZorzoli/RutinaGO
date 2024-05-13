@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"rutina.api/Controllers"
+	"rutina.api/Middleware"
 	"rutina.api/Repositories"
 )
 
@@ -15,6 +16,8 @@ func main() {
 	}
 
 	router := gin.Default()
+
+	router.Use(Middleware.ErrorHandler())
 
 	Controllers.RegisterEjercicioRoutes(router, repository)
 

@@ -2,6 +2,7 @@ package Repositories
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -68,20 +69,24 @@ func (repository *EjercicioRepository) GetAllEjercicios() ([]Models.Ejercicio, e
 func (repository *EjercicioRepository) GetEjercicioByID(id int) (Models.Ejercicio, error) {
 	log.Println("Iniciando GetEjercicioByID")
 
+	var ejercicio = Models.Ejercicio{}
+
 	query := "SELECT * FROM ejercicio WHERE eje_id = ?"
 
 	var row Models.EjercicioRow
 	err := repository.db.QueryRow(query, id).Scan(&row.ID, &row.Descripcion, &row.FechaAlta, &row.FechaBaja)
 
-	var ejercicio Models.Ejercicio
 	ejercicio.ID = row.ID
 	ejercicio.Descripcion = row.Descripcion
 	ejercicio.FechaAlta = row.FechaAlta
 	ejercicio.FechaBaja = row.FechaBaja
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return ejercicio, fmt.Errorf("no se encontró ningún ejercicio con el ID: %d", id)
+		}
 		log.Println("Error al ejecutar la consulta:", err)
-		return Models.Ejercicio{}, err
+		return ejercicio, err
 	}
 
 	return ejercicio, nil
