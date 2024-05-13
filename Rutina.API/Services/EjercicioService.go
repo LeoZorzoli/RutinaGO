@@ -20,18 +20,13 @@ func (service *EjercicioService) GetAllEjercicios() ([]Models.Ejercicio, error) 
 }
 
 func (service *EjercicioService) GetEjercicioByID(id int) (Models.Ejercicio, error) {
-
-	return Models.Ejercicio{}, nil
+	return service.repository.GetEjercicioByID(id)
 }
 
 func (service *EjercicioService) CreateEjercicio(ejercicio Models.Ejercicio) error {
-	return nil
-}
-
-func (service *EjercicioService) UpdateEjercicio(id int, ejercicio Models.Ejercicio) error {
-	return nil
+	return service.repository.CreateEjercicio(ejercicio)
 }
 
 func (service *EjercicioService) DeleteEjercicio(id int) error {
-	return nil
+	return service.repository.DeleteEjercicio(id)
 }

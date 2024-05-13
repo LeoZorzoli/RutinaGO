@@ -3,17 +3,16 @@ package Repositories
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	"rutina.api/Database"
 	"rutina.api/Models"
 )
 
-// EjercicioRepository maneja las operaciones relacionadas con los ejercicios en la base de datos.
 type EjercicioRepository struct {
 	db *sql.DB
 }
 
-// NewEjercicioRepository crea una nueva instancia del repositorio de ejercicios.
 func NewEjercicioRepository() (*EjercicioRepository, error) {
 	log.Println("Iniciando NewEjercicioRepository")
 	db, err := Database.InitDB()
@@ -27,14 +26,12 @@ func NewEjercicioRepository() (*EjercicioRepository, error) {
 	return &EjercicioRepository{db: db}, nil
 }
 
-// GetEjercicios devuelve una lista de ejercicios desde la base de datos.
 func (repository *EjercicioRepository) GetAllEjercicios() ([]Models.Ejercicio, error) {
 
 	log.Println("Iniciando GetAllEjercicios")
 
-	query := "SELECT * FROM ejercicio"
+	query := "SELECT * FROM ejercicio WHERE eje_fec_baj IS null"
 
-	// Ejecutar la consulta
 	rows, err := repository.db.Query(query)
 	if err != nil {
 		log.Println("Error al ejecutar la consulta:", err)
@@ -42,25 +39,85 @@ func (repository *EjercicioRepository) GetAllEjercicios() ([]Models.Ejercicio, e
 	}
 	defer rows.Close()
 
-	// Crear una lista para almacenar los ejercicios escaneados
 	var ejercicios []Models.Ejercicio
 
-	// Recorrer las filas y escanear cada una en un struct Ejercicio
 	for rows.Next() {
-		var ejercicio Models.Ejercicio
-		if err := rows.Scan(&ejercicio.Id, &ejercicio.Descripcion, &ejercicio.FechaAlta, &ejercicio.FechaBaja); err != nil {
+		var row Models.EjercicioRow
+		if err := rows.Scan(&row.ID, &row.Descripcion, &row.FechaAlta, &row.FechaBaja); err != nil {
 			log.Println("Error al escanear fila:", err)
 			return nil, err
 		}
-		// Agregar el ejercicio escaneado a la lista
+
+		var ejercicio Models.Ejercicio
+		ejercicio.ID = row.ID
+		ejercicio.Descripcion = row.Descripcion
+		ejercicio.FechaAlta = row.FechaAlta
+		ejercicio.FechaBaja = row.FechaBaja
+
 		ejercicios = append(ejercicios, ejercicio)
 	}
 
-	// Verificar errores de rows.Next()
 	if err := rows.Err(); err != nil {
 		log.Println("Error al iterar sobre filas:", err)
 		return nil, err
 	}
 
 	return ejercicios, nil
+}
+
+func (repository *EjercicioRepository) GetEjercicioByID(id int) (Models.Ejercicio, error) {
+	log.Println("Iniciando GetEjercicioByID")
+
+	query := "SELECT * FROM ejercicio WHERE eje_id = ?"
+
+	var row Models.EjercicioRow
+	err := repository.db.QueryRow(query, id).Scan(&row.ID, &row.Descripcion, &row.FechaAlta, &row.FechaBaja)
+
+	var ejercicio Models.Ejercicio
+	ejercicio.ID = row.ID
+	ejercicio.Descripcion = row.Descripcion
+	ejercicio.FechaAlta = row.FechaAlta
+	ejercicio.FechaBaja = row.FechaBaja
+
+	if err != nil {
+		log.Println("Error al ejecutar la consulta:", err)
+		return Models.Ejercicio{}, err
+	}
+
+	return ejercicio, nil
+}
+
+func (repository *EjercicioRepository) CreateEjercicio(ejercicio Models.Ejercicio) error {
+	log.Println("Iniciando CreateEjercicio")
+
+	row := Models.EjercicioRow{
+		Descripcion: ejercicio.Descripcion,
+		FechaAlta:   time.Now(),
+		FechaBaja:   nil,
+	}
+
+	query := "INSERT INTO ejercicio (eje_desc, eje_fec_alt, eje_fec_baj) VALUES (?, ?, ?)"
+
+	_, err := repository.db.Exec(query, row.Descripcion, row.FechaAlta, row.FechaBaja)
+	if err != nil {
+		log.Println("Error al ejecutar la consulta:", err)
+		return err
+	}
+
+	return nil
+}
+
+func (repository *EjercicioRepository) DeleteEjercicio(id int) error {
+	log.Println("Iniciando DeleteEjercicio")
+	log.Println(id)
+
+	query := "UPDATE ejercicio SET eje_fec_baj = date('now') WHERE eje_id = ?"
+
+	_, err := repository.db.Exec(query, id)
+	if err != nil {
+		log.Println("Error al ejecutar la consulta:", err)
+		return err
+	}
+
+	return nil
 }

@@ -9,13 +9,13 @@ import (
 )
 
 func main() {
-	// Inicializar la conexión a la base de datos
 	repository, err := InitializeDatabase()
 	if err != nil {
 		panic("Error al inicializar la base de datos: " + err.Error())
 	}
 
 	router := gin.Default()
+
 	Controllers.RegisterEjercicioRoutes(router, repository)
 
 	err = router.Run(":8080")
@@ -25,7 +25,6 @@ func main() {
 }
 
 func InitializeDatabase() (Repositories.EjercicioRepository, error) {
-	// Iniciar la conexión a la base de datos
 	repository, err := Repositories.NewEjercicioRepository()
 	if err != nil {
 		log.Println("Error al inicializar la base de datos:", err)
